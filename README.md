@@ -1,5 +1,5 @@
 # Game Store Analytics App
-## Copyright 2023 Nedelcu Andrei-David
+## Copyright 2025 Nedelcu Andrei-David
 ___________________________________________________________________________________________
 
 ### Local Deployment Instructions
@@ -12,5 +12,6 @@ Next, run the backend.py script and visit the web link http://127.0.0.1:5000/.
 Enjoy!
 
 For more info about the flow of the app and implementation details check the Documentation(RO).
+
 
 

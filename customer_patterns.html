@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Purchase and Review Patterns</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Import Chart.js -->
+</head>
+<body>
+    <div class="container">
+        <h1>Customer purchase and review patterns</h1>
+
+        <!-- Filter Form -->
+        <form method="POST">
+            <label for="sort_key">Sort By:</label>
+            <select name="sort_key" id="sort_key">
+                <option value="Total Spending" {% if sort_key == 'Total Spending' or not sort_key %}selected{% endif %}>Total Spending</option>
+                <option value="Total Orders" {% if sort_key == 'Total Orders' %}selected{% endif %}>Total Orders</option>
+                <option value="Average Order Value" {% if sort_key == 'Average Order Value' %}selected{% endif %}>Average Order Value</option>
+            </select>
+            <button type="submit">Apply</button>
+        </form>
+
+        <!-- Bar Chart -->
+        <canvas id="barChart" width="400" height="200"></canvas>
+
+        <!-- Data Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Total Orders</th>
+                    <th>Total Spending</th>
+                    <th>Average Order Value</th>
+                    <th>Total Reviews</th>
+                    <th>Average Rating Given</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row[0] }}</td> <!-- Customer ID -->
+                    <td>{{ row[1] }}</td> <!-- First Name -->
+                    <td>{{ row[2] }}</td> <!-- Last Name -->
+                    <td>{{ row[3] }}</td> <!-- Total Orders -->
+                    <td>{{ row[4] }}</td> <!-- Total Spending -->
+                    <!-- Formatarea "Average Order Value" pentru a arăta 2 zecimale -->
+                    <td>{{ "%.2f"|format(row[5]) }}</td> <!-- Average Order Value -->
+                    <td>{{ row[6] }}</td> <!-- Total Reviews -->
+                    <td>{{ row[7] }}</td> <!-- Average Rating Given -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/" class="button">Back</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Extragem datele din tabel
+            var customerNames = [];
+            var totalOrders = [];
+            var totalSpending = [];
+            var avgOrderValue = [];
+
+            var tableRows = document.querySelectorAll('table tbody tr');
+            
+            tableRows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                var name = cells[1].textContent.trim() + ' ' + cells[2].textContent.trim(); // FirstName LastName
+                var orders = parseInt(cells[3].textContent.trim(), 10); // Total Orders
+                var spending = parseFloat(cells[4].textContent.trim().replace(/[^\d.-]/g, '')); // Total Spending
+                var orderValue = parseFloat(cells[5].textContent.trim().replace(/[^\d.-]/g, '')); // Average Order Value
+                
+                if (!isNaN(orders)) {
+                    customerNames.push(name);
+                    totalOrders.push(orders);
+                    totalSpending.push(spending);
+                    avgOrderValue.push(orderValue.toFixed(2));  // Rotunjim la 2 zecimale
+                }
+            });
+
+            // Funcție de sortare a datelor
+            function sortData(data, key) {
+                return data.sort(function(a, b) {
+                    // Sortăm numeric
+                    if (key === 'Total Orders' || key === 'Total Spending' || key === 'Average Order Value') {
+                        return b - a; // Ordine descrescătoare
+                    }
+                    return 0;
+                });
+            }
+
+            // Creăm funcția de generare a graficului
+            function generateChart(orderData, spendingData, avgOrderData, labels) {
+                var ctx = document.getElementById('barChart').getContext('2d');
+                var barChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels.slice(0, 10),  // Primele 10 persoane
+                        datasets: [
+                            {
+                                label: 'Total Orders',
+                                data: orderData.slice(0, 10),  // Primele 10 valori
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)', // Albastru
+                                borderColor: 'rgba(54, 162, 235, 1)', 
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Total Spending',
+                                data: spendingData.slice(0, 10),
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)', // Roșu
+                                borderColor: 'rgba(255, 99, 132, 1)', 
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Average Order Value',
+                                data: avgOrderData.slice(0, 10),
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)', // Verde
+                                borderColor: 'rgba(75, 192, 192, 1)', 
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Afișăm graficul în funcție de opțiunea selectată
+            var sortBy = document.getElementById('sort_key').value;
+
+            // Sortăm datele în funcție de selecția Sort By
+            if (sortBy === 'Total Orders') {
+                var sortedOrders = sortData(totalOrders.slice(), 'Total Orders');
+                var sortedSpending = sortData(totalSpending.slice(), 'Total Orders');
+                var sortedAvgOrderValue = sortData(avgOrderValue.slice(), 'Total Orders');
+                generateChart(sortedOrders, sortedSpending, sortedAvgOrderValue, customerNames);
+            } else if (sortBy === 'Total Spending') {
+                var sortedOrders = sortData(totalOrders.slice(), 'Total Spending');
+                var sortedSpending = sortData(totalSpending.slice(), 'Total Spending');
+                var sortedAvgOrderValue = sortData(avgOrderValue.slice(), 'Total Spending');
+                generateChart(sortedOrders, sortedSpending, sortedAvgOrderValue, customerNames);
+            } else if (sortBy === 'Average Order Value') {
+                var sortedOrders = sortData(totalOrders.slice(), 'Average Order Value');
+                var sortedSpending = sortData(totalSpending.slice(), 'Average Order Value');
+                var sortedAvgOrderValue = sortData(avgOrderValue.slice(), 'Average Order Value');
+                generateChart(sortedOrders, sortedSpending, sortedAvgOrderValue, customerNames);
+            } else {
+                var sortedOrders = sortData(totalOrders.slice(), 'Total Spending');
+                var sortedSpending = sortData(totalSpending.slice(), 'Total Spending');
+                var sortedAvgOrderValue = sortData(avgOrderValue.slice(), 'Total Spending');
+                generateChart(sortedOrders, sortedSpending, sortedAvgOrderValue, customerNames);
+            }
+
+            // Actualizăm graficul la schimbarea valorii din "Sort By"
+            document.getElementById('sort_key').addEventListener('change', function() {
+                sortBy = this.value;
+                if (sortBy === 'Total Orders') {
+                    var sortedOrders = sortData(totalOrders.slice(), 'Total Orders');
+                    var sortedSpending = sortData(totalSpending.slice(), 'Total Orders');
+                    var sortedAvgOrderValue = sortData(avgOrderValue.slice(), 'Total Orders');
+                    generateChart(sortedOrders, sortedSpending, sortedAvgOrderValue, customerNames);
+                } else if (sortBy === 'Total Spending') {
+                    var sortedOrders = sortData(totalOrders.slice(), 'Total Spending');
+                    var sortedSpending = sortData(totalSpending.slice(), 'Total Spending');
+                    var sortedAvgOrderValue = sortData(avgOrderValue.slice(), 'Total Spending');
+                    generateChart(sortedOrders, sortedSpending, sortedAvgOrderValue, customerNames);
+                } else if (sortBy === 'Average Order Value') {
+                    var sortedOrders = sortData(totalOrders.slice(), 'Average Order Value');
+                    var sortedSpending = sortData(totalSpending.slice(), 'Average Order Value');
+                    var sortedAvgOrderValue = sortData(avgOrderValue.slice(), 'Average Order Value');
+                    generateChart(sortedOrders, sortedSpending, sortedAvgOrderValue, customerNames);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

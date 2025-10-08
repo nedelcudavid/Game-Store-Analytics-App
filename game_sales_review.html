@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Sales Review</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Import Chart.js -->
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Game sales and rating analysis</h1>
+
+        <!-- Filter Form -->
+        <form method="POST">
+            <label for="category">Choose a Category:</label>
+            <select name="category" id="category">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="sort_key">Sort By:</label>
+            <select name="sort_key" id="sort_key">
+                <option value="Total Sales" {% if sort_key == 'Total Sales' %}selected{% endif %}>Total Sales</option>
+                <option value="Total Revenue" {% if sort_key == 'Total Revenue' %}selected{% endif %}>Total Revenue</option>
+                <option value="Rating" {% if sort_key == 'Rating' %}selected{% endif %}>Rating</option>
+            </select>
+            <button type="submit">Apply</button>
+        </form>
+
+        <!-- Bar Chart -->
+        <canvas id="barChart" width="400" height="200"></canvas>
+
+        <!-- Data Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Game</th>
+                    <th>Category</th>
+                    <th>Total Sales</th>
+                    <th>Total Revenue</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ row[4] }}</td>
+                    <td>{{ row[5] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/" class="button">Back</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var gameNames = [];
+            var revenues = [];
+            var sales = [];
+            var ratings = [];
+
+            var tableRows = document.querySelectorAll('table tbody tr');
+            tableRows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                var gameName = cells[1].textContent.trim(); 
+                var revenue = parseFloat(cells[4].textContent.trim().replace(/[^\d.-]/g, ''));
+                var sale = parseFloat(cells[3].textContent.trim().replace(/[^\d.-]/g, '')); 
+                var rating = parseFloat(cells[5].textContent.trim().replace(/[^\d.-]/g, '')); 
+
+                if (!isNaN(revenue)) {
+                    gameNames.push(gameName);
+                    revenues.push(revenue);
+                    sales.push(sale);
+                    ratings.push(rating);
+                }
+            });
+
+            function generateChart(primaryData, secondaryData, tertiaryData, labels, primaryLabel, secondaryLabel, tertiaryLabel) {
+                var ctx = document.getElementById('barChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels.slice(0, 10),
+                        datasets: [
+                            {
+                                label: primaryLabel,
+                                data: primaryData.slice(0, 10),
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: secondaryLabel,
+                                data: secondaryData.slice(0, 10),
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: tertiaryLabel,
+                                data: tertiaryData.slice(0, 10),
+                                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateChart(sortBy) {
+                if (sortBy === 'Total Sales') {
+                    generateChart(sales, revenues, ratings, gameNames, 'Total Sales', 'Total Revenue', 'Rating');
+                } else if (sortBy === 'Total Revenue') {
+                    generateChart(revenues, sales, ratings, gameNames, 'Total Revenue', 'Total Sales', 'Rating');
+                } else if (sortBy === 'Rating') {
+                    generateChart(ratings, revenues, sales, gameNames, 'Rating', 'Total Revenue', 'Total Sales');
+                }
+            }
+
+            var sortBy = document.getElementById('sort_key').value;
+            updateChart(sortBy);
+
+            document.getElementById('sort_key').addEventListener('change', function() {
+                sortBy = this.value;
+                updateChart(sortBy);
+            });
+        });
+    </script>
+</body>
+</html>

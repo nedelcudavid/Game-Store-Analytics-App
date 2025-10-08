@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales by Category</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <!-- Include Chart.js for pie chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Centering the Pie Chart */
+        #pieChartContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #salesPieChart {
+            width: 500px !important;
+            height: 500px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sales count by category</h1>
+
+        <!-- Pie Chart -->
+        <div id="pieChartContainer">
+            <canvas id="salesPieChart" width="150" height="150"></canvas>
+        </div>
+
+        <!-- Data Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Total Games Sold</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/" class="button">Back</a>
+    </div>
+
+    <script>
+        // Data for the Pie Chart
+        const salesData = {
+            labels: [{% for row in data %}'{{ row[0] }}'{% if not loop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Total Games Sold',
+                data: [{% for row in data %}{{ row[1] }}{% if not loop.last %},{% endif %}{% endfor %}],
+                backgroundColor: ['#FF4F4F', '#FF8C42', '#FFD700', '#32CD32', '#1E90FF', '#6A5ACD', '#DA70D6'], // Updated ROGVAIV colors
+            }]
+        };
+    
+        // Config for Pie Chart
+        const config = {
+            type: 'pie',
+            data: salesData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ": " + tooltipItem.raw + " sales";
+                            }
+                        }
+                    }
+                }
+            },
+        };
+    
+        // Render Pie Chart
+        const salesPieChart = new Chart(
+            document.getElementById('salesPieChart'),
+            config
+        );
+    </script>
+</body>
+</html>

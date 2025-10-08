@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Additions</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Import Chart.js -->
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Wishlist additions and rating analysis</h1>
+
+        <!-- Filter Form -->
+        <form method="POST">
+            <label for="category">Choose a Category:</label>
+            <select name="category" id="category">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="sort_key">Sort By:</label>
+            <select name="sort_key" id="sort_key">
+                <option value="Wishlist Additions" {% if sort_key == 'Wishlist Additions' or not sort_key %}selected{% endif %}>Wishlist Additions</option>
+                <option value="Rating" {% if sort_key == 'Rating' %}selected{% endif %}>Rating</option>
+            </select>
+
+            <button type="submit">Apply</button>
+        </form>
+
+        <!-- Bar Chart -->
+        <canvas id="wishlistChart" width="400" height="200"></canvas>
+
+        <!-- Data Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Game</th>
+                    <th>Price</th>
+                    <th>Category</th>
+                    <th>Wishlist Additions</th>
+                    <th>Average Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row[0] }}</td> <!-- Game ID -->
+                    <td>{{ row[1] }}</td> <!-- Game Title -->
+                    <td>{{ row[2] }}</td> <!-- Game Price -->
+                    <td>{{ row[3] }}</td> <!-- Category -->
+                    <td>{{ row[4] }}</td> <!-- Wishlist Additions -->
+                    <td>{{ row[5] }}</td> <!-- Average Rating -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/" class="button">Back</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Extragem datele din tabel
+            var gameNames = [];
+            var wishlistAdditions = [];
+            var ratings = [];
+    
+            var tableRows = document.querySelectorAll('table tbody tr');
+            
+            tableRows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                var gameName = cells[1].textContent.trim();
+                var wishlistAddition = parseInt(cells[4].textContent.trim()); 
+                var rating = parseFloat(cells[5].textContent.trim().replace(/[^\d.-]/g, '')); 
+    
+                if (!isNaN(wishlistAddition) && !isNaN(rating)) {
+                    gameNames.push(gameName);
+                    wishlistAdditions.push(wishlistAddition);
+                    ratings.push(rating);
+                }
+            });
+    
+            // Creăm funcția de generare a graficului
+            function generateChart(data, labels, labelText) {
+                var ctx = document.getElementById('wishlistChart').getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels.slice(0, 10),  
+                        datasets: [{
+                            label: 'Wishlist Additions', 
+                            data: data[0].slice(0, 10),  
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)', 
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Average Rating',
+                            data: data[1].slice(0, 10),  
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)', 
+                            borderColor: 'rgba(75, 192, 192, 1)', 
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+    
+            // Afișăm graficul în funcție de opțiunea selectată
+            var sortBy = document.getElementById('sort_key').value;
+            var labelText = '';
+            var dataForChart = [wishlistAdditions, ratings];
+            if (sortBy === 'Wishlist Additions') {
+                generateChart(dataForChart, gameNames, 'Wishlist Additions');
+            } else if (sortBy === 'Rating') {
+                generateChart(dataForChart, gameNames, 'Average Rating');
+            } else {
+                generateChart(dataForChart, gameNames, 'Wishlist Additions'); 
+            }
+    
+            // Actualizăm graficul la schimbarea valorii din "Sort By"
+            document.getElementById('sort_key').addEventListener('change', function() {
+                sortBy = this.value;
+                if (sortBy === 'Wishlist Additions') {
+                    generateChart(dataForChart, gameNames, 'Wishlist Additions');
+                } else if (sortBy === 'Rating') {
+                    generateChart(dataForChart, gameNames, 'Average Rating');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

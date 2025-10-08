@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue by Category</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Revenue by category per day on the last 6 months</h1>
+
+        <!-- Filter Form -->
+        <form method="POST">
+            <label for="category">Choose a Category:</label>
+            <select name="category" id="category">
+                {% for category in categories %}
+                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Filter</button>
+        </form>
+
+        <!-- Line Chart -->
+        {% if selected_category and selected_category != "All Categories" %}
+        <canvas id="revenueChart" width="800" height="400"></canvas>
+        <script>
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: {{ chart_labels | safe }}, 
+                    datasets: [{
+                        label: 'Revenue for {{ selected_category }}',
+                        data: {{ chart_values | safe }}, 
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        fill: true,
+                        tension: 0.4 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Revenue'
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+        {% endif %}
+
+        <!-- Data Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Total Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/" class="button">Back</a>
+    </div>
+</body>
+</html>

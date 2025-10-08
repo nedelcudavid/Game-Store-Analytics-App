@@ -1,0 +1,21 @@
+<!-- home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Welcome to the analytics dashboard</h1>
+
+    <div class="button-container">
+        <a href="/sales_by_category" class="button">Sales Count by Category</a>
+        <a href="/game_sales_review" class="button">Game Sales and Review Analysis</a>
+        <a href="/revenue_by_category" class="button">Revenue by Category (Last 6 Months)</a>
+        <a href="/wishlist_additions" class="button">Wishlist Additions and Review Analysis</a>
+        <a href="/customer_patterns" class="button">Customer Purchase and Review Patterns</a>
+    </div>
+</body>
+</html>

@@ -11,3 +11,6 @@ Then, make an App folder and open it in VS Code, which contains the application'
 Next, run the backend.py script and visit the web link http://127.0.0.1:5000/. 
 Enjoy!
 
+For more info about the flow of the app and implementation details check the Documentation(RO).
+
+
